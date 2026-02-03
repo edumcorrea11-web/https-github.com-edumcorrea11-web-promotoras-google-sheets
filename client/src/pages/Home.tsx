@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle2, AlertCircle, Upload } from "lucide-react";
+import { CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Home() {
@@ -35,7 +35,6 @@ export default function Home() {
     feedback: "",
   });
 
-  const [photos, setPhotos] = useState<File[]>([]);
   const [submitted, setSubmitted] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -47,15 +46,7 @@ export default function Home() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setPhotos(prev => [...prev, ...Array.from(e.target.files || [])]);
-    }
-  };
 
-  const removePhoto = (index: number) => {
-    setPhotos(prev => prev.filter((_, i) => i !== index));
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -107,7 +98,8 @@ export default function Home() {
 **3. OBSERVAÇÕES GERAIS:**
 ${formData.generalObservations || "Nenhuma observação adicional"}
 
-**FOTOS:** ${photos.length > 0 ? `${photos.length} foto(s) anexada(s)` : "Nenhuma foto"}`;
+---
+*Envie fotos da visita logo após este relatório*`;
     } else {
       return `*ALERTA BRIDOR - VISITA CRÍTICA*
 
@@ -131,7 +123,8 @@ ${formData.actionTaken}
 **5. FEEDBACK DA LOJA/LÍDER:**
 ${formData.feedback}
 
-**FOTOS:** ${photos.length > 0 ? `${photos.length} foto(s) de evidência anexada(s)` : "Nenhuma foto"}`;
+---
+*Envie fotos de evidência da situação logo após este relatório*`;
     }
   };
 
@@ -167,7 +160,6 @@ ${formData.feedback}
       actionTaken: "",
       feedback: "",
     });
-    setPhotos([]);
     setSubmitted(false);
   };
 
@@ -568,50 +560,7 @@ ${formData.feedback}
               </TabsContent>
             </Tabs>
 
-            {/* Photo Upload */}
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle>Fotos (Opcional)</CardTitle>
-                <CardDescription>Anexe fotos para comprovar as observações</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors cursor-pointer">
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={handlePhotoUpload}
-                    className="hidden"
-                    id="photo-input"
-                  />
-                  <label htmlFor="photo-input" className="cursor-pointer block">
-                    <Upload className="w-8 h-8 mx-auto mb-2 text-slate-400" />
-                    <p className="text-sm text-slate-600">Clique para selecionar fotos</p>
-                  </label>
-                </div>
 
-                {photos.length > 0 && (
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-slate-700">{photos.length} foto(s) selecionada(s):</p>
-                    <div className="space-y-2">
-                      {photos.map((photo, index) => (
-                        <div key={index} className="flex items-center justify-between bg-slate-100 p-2 rounded">
-                          <span className="text-sm text-slate-700">{photo.name}</span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removePhoto(index)}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            Remover
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
 
             {/* Submit Button */}
             <div className="mt-8 flex gap-3">
