@@ -18,6 +18,8 @@ export default function Home() {
     visitDate: "",
     network: "",
     store: "",
+    leaderName: "",
+    leaderPhone: "",
     productsInFreezer: "yes",
     freezerProducts: "",
     freezerOrganization: "ok",
@@ -80,7 +82,9 @@ export default function Home() {
 **Promotora:** ${formData.promoter}
 **Data Visita:** ${formData.visitDate}
 **Rede:** ${formData.network}
-**Loja:** ${formData.store}
+**Loja:** ${formData.store}${formData.leaderName ? `
+**Líder da Padaria:** ${formData.leaderName}` : ""}${formData.leaderPhone ? `
+**Telefone:** ${formData.leaderPhone}` : ""}
 
 **1. ESTOQUE (Câmara Fria):**
    - Produtos Bridor presentes? ${formData.productsInFreezer === "yes" ? "SIM" : "NÃO"}
@@ -106,7 +110,9 @@ ${formData.generalObservations || "Nenhuma observação adicional"}
 **Promotora:** ${formData.promoter}
 **Data Visita:** ${formData.visitDate}
 **Rede:** ${formData.network}
-**Loja:** ${formData.store}
+**Loja:** ${formData.store}${formData.leaderName ? `
+**Líder da Padaria:** ${formData.leaderName}` : ""}${formData.leaderPhone ? `
+**Telefone:** ${formData.leaderPhone}` : ""}
 
 **1. PROBLEMA PRINCIPAL IDENTIFICADO:**
 ${formData.mainProblem}
@@ -144,6 +150,8 @@ ${formData.feedback}
       visitDate: "",
       network: "",
       store: "",
+      leaderName: "",
+      leaderPhone: "",
       productsInFreezer: "yes",
       freezerProducts: "",
       freezerOrganization: "ok",
@@ -260,6 +268,26 @@ ${formData.feedback}
                           value={formData.store}
                           onChange={handleInputChange}
                           required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="leaderName">Líder da Padaria</Label>
+                        <Input
+                          id="leaderName"
+                          name="leaderName"
+                          placeholder="Nome do responsável"
+                          value={formData.leaderName}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="leaderPhone">Telefone do Líder</Label>
+                        <Input
+                          id="leaderPhone"
+                          name="leaderPhone"
+                          placeholder="Ex: (21) 99999-9999"
+                          value={formData.leaderPhone}
+                          onChange={handleInputChange}
                         />
                       </div>
                     </div>
@@ -475,6 +503,26 @@ ${formData.feedback}
                           value={formData.store}
                           onChange={handleInputChange}
                           required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="leaderName-crit">Líder da Padaria</Label>
+                        <Input
+                          id="leaderName-crit"
+                          name="leaderName"
+                          placeholder="Nome do responsável"
+                          value={formData.leaderName}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="leaderPhone-crit">Telefone do Líder</Label>
+                        <Input
+                          id="leaderPhone-crit"
+                          name="leaderPhone"
+                          placeholder="Ex: (21) 99999-9999"
+                          value={formData.leaderPhone}
+                          onChange={handleInputChange}
                         />
                       </div>
                     </div>
