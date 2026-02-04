@@ -3,7 +3,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { createReport } from "./db";
-import { sendReportNotification } from "./emailService";
+import { sendReportEmail } from "./gmailService";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -57,7 +57,7 @@ export const appRouter = router({
           ...input,
         });
 
-        // Send email notification asynchronously (don't wait for it)
+        // Send email asynchronously (don't wait for it)
         const mockReport = {
           id: 0,
           userId: 1,
@@ -87,7 +87,7 @@ export const appRouter = router({
           createdAt: new Date(),
           updatedAt: new Date(),
         };
-        sendReportNotification(mockReport).catch(err => console.error('Failed to send notification:', err));
+        sendReportEmail(mockReport, process.env.GMAIL_USER || 'edumcorrea11@gmail.com').catch(err => console.error('Failed to send email:', err));
 
         return { success: true, message: 'Report submitted successfully' };
       }),
