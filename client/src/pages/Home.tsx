@@ -62,24 +62,11 @@ export default function Home() {
       await navigator.clipboard.writeText(report);
       toast.success("Relatório copiado para a área de transferência!");
       
-      const response = await fetch("/api/trpc/reports.submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          json: { reportType: formData.productsInFreezer ? "simple" : "critical", ...formData, report: "" }
-        })
-      });
-      
-      if (response.ok) {
-        console.log("Relatório enviado para o backend");
-      }
-      
       setSubmitted(true);
       setTimeout(() => { resetForm(); }, 2000);
     } catch (error) {
       console.error("Erro:", error);
-      toast.error("Erro ao preparar relatório");
+      toast.error("Erro ao copiar relatório");
     }
   };
 
