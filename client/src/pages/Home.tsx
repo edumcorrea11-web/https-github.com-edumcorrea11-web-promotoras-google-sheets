@@ -48,7 +48,7 @@ export default function Home() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.promoter || !formData.visitDate || !formData.network || !formData.store) {
@@ -59,17 +59,24 @@ export default function Home() {
     try {
       const report = formatReport();
       
-      navigator.clipboard.writeText(report).then(() => {
-        toast.success("Relatório copiado para a área de transferência!");
-        setSubmitted(true);
-        
-        setTimeout(() => {
-          resetForm();
-        }, 2000);
-      }).catch((err) => {
-        console.error("Erro ao copiar:", err);
-        toast.error("Erro ao copiar para clipboard");
+      await navigator.clipboard.writeText(report);
+      toast.success("Relatório copiado para a área de transferência!");
+      
+      const response = await fetch("/api/trpc/reports.submit?batch=1", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          0: { json: { reportType, ...formData } }
+        })
       });
+      
+      if (response.ok) {
+        console.log("Relatório enviado para o backend");
+      }
+      
+      setSubmitted(true);
+      setTimeout(() => { resetForm(); }, 2000);
     } catch (error) {
       console.error("Erro:", error);
       toast.error("Erro ao preparar relatório");
