@@ -1,0 +1,32 @@
+CREATE TABLE `reports` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`userId` int NOT NULL,
+	`reportType` varchar(50) NOT NULL,
+	`promoter` varchar(255) NOT NULL,
+	`visitDate` varchar(50) NOT NULL,
+	`network` varchar(255) NOT NULL,
+	`store` varchar(255) NOT NULL,
+	`leaderName` varchar(255),
+	`leaderPhone` varchar(50),
+	`productsInFreezer` varchar(50),
+	`freezerProducts` text,
+	`freezerOrganization` varchar(50),
+	`freezerProblems` text,
+	`productsToasted` varchar(50),
+	`toastedProducts` text,
+	`visualQuality` varchar(50),
+	`exposure` varchar(50),
+	`exposureProblems` text,
+	`generalObservations` text,
+	`mainProblem` text,
+	`stockDetails` text,
+	`counterDetails` text,
+	`actionTaken` text,
+	`feedback` text,
+	`report` text NOT NULL,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `reports_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+ALTER TABLE `reports` ADD CONSTRAINT `reports_userId_users_id_fk` FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;

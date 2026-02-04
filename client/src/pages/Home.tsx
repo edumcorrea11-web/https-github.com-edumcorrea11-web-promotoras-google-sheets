@@ -38,6 +38,7 @@ export default function Home() {
   });
 
   const [submitted, setSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -48,9 +49,7 @@ export default function Home() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.promoter || !formData.visitDate || !formData.network || !formData.store) {
@@ -58,21 +57,47 @@ export default function Home() {
       return;
     }
 
-    // Format the report
-    const report = formatReport();
-    
-    // Copy to clipboard
-    navigator.clipboard.writeText(report).then(() => {
-      toast.success("Relatório copiado para a área de transferência!");
+    setIsLoading(true);
+
+    try {
+      // Format the report
+      const report = formatReport();
+      
+      // Send to backend
+      const response = await fetch("/api/trpc/reports.submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          json: {
+            reportType,
+            ...formData,
+            report,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Erro ao enviar relatório");
+      }
+
+      // Copy to clipboard
+      await navigator.clipboard.writeText(report);
+      toast.success("Relatório enviado e copiado para a área de transferência!");
       setSubmitted(true);
       
       // Reset form after 2 seconds
       setTimeout(() => {
         resetForm();
       }, 2000);
-    }).catch(() => {
-      toast.error("Erro ao copiar relatório");
-    });
+    } catch (error) {
+      console.error("Erro:", error);
+      toast.error("Erro ao enviar relatório");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const formatReport = () => {
@@ -608,16 +633,15 @@ ${formData.feedback}
               </TabsContent>
             </Tabs>
 
-
-
             {/* Submit Button */}
             <div className="mt-8 flex gap-3">
               <Button
                 onClick={handleSubmit}
                 size="lg"
+                disabled={isLoading}
                 className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold"
               >
-                Preparar Relatório para WhatsApp
+                {isLoading ? "Enviando..." : "Preparar Relatório para WhatsApp"}
               </Button>
               <Button
                 onClick={resetForm}
