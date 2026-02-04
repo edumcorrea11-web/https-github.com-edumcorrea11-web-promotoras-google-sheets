@@ -5,11 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { trpc } from "@/lib/trpc";
 
 export default function Home() {
   const [reportType, setReportType] = useState("simple");
@@ -38,7 +38,7 @@ export default function Home() {
   });
 
   const [submitted, setSubmitted] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const submitMutation = trpc.reports.submit.useMutation();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -57,35 +57,46 @@ export default function Home() {
       return;
     }
 
-    setIsLoading(true);
-
     try {
       // Format the report
       const report = formatReport();
       
-      // Send to backend
-      const response = await fetch("/api/trpc/reports.submit", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          json: {
-            reportType,
-            ...formData,
-            report,
-          },
-        }),
+      // Send to backend using tRPC
+      await submitMutation.mutateAsync({
+        reportType,
+        promoter: formData.promoter,
+        visitDate: formData.visitDate,
+        network: formData.network,
+        store: formData.store,
+        leaderName: formData.leaderName || undefined,
+        leaderPhone: formData.leaderPhone || undefined,
+        productsInFreezer: formData.productsInFreezer,
+        freezerProducts: formData.freezerProducts || undefined,
+        freezerOrganization: formData.freezerOrganization,
+        freezerProblems: formData.freezerProblems || undefined,
+        productsToasted: formData.productsToasted,
+        toastedProducts: formData.toastedProducts || undefined,
+        visualQuality: formData.visualQuality,
+        exposure: formData.exposure,
+        exposureProblems: formData.exposureProblems || undefined,
+        generalObservations: formData.generalObservations || undefined,
+        mainProblem: formData.mainProblem || undefined,
+        stockDetails: formData.stockDetails || undefined,
+        counterDetails: formData.counterDetails || undefined,
+        actionTaken: formData.actionTaken || undefined,
+        feedback: formData.feedback || undefined,
+        report,
       });
 
-      if (!response.ok) {
-        throw new Error("Erro ao enviar relatório");
-      }
-
       // Copy to clipboard
-      await navigator.clipboard.writeText(report);
-      toast.success("Relatório enviado e copiado para a área de transferência!");
+      try {
+        await navigator.clipboard.writeText(report);
+        toast.success("Relatório enviado e copiado para a área de transferência!");
+      } catch (clipboardError) {
+        console.error("Erro ao copiar:", clipboardError);
+        toast.success("Relatório enviado! (Erro ao copiar para clipboard)");
+      }
+      
       setSubmitted(true);
       
       // Reset form after 2 seconds
@@ -93,10 +104,8 @@ export default function Home() {
         resetForm();
       }, 2000);
     } catch (error) {
-      console.error("Erro:", error);
+      console.error("Erro ao enviar relatório:", error);
       toast.error("Erro ao enviar relatório");
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -127,7 +136,7 @@ export default function Home() {
 **3. OBSERVAÇÕES GERAIS:**
 ${formData.generalObservations || "Nenhuma observação adicional"}
 
----
+----
 *Envie fotos da visita logo após este relatório*`;
     } else {
       return `*ALERTA BRIDOR - VISITA CRÍTICA*
@@ -154,7 +163,7 @@ ${formData.actionTaken}
 **5. FEEDBACK DA LOJA/LÍDER:**
 ${formData.feedback}
 
----
+----
 *Envie fotos de evidência da situação logo após este relatório*`;
     }
   };
@@ -244,413 +253,438 @@ ${formData.feedback}
 
               {/* Simple Report */}
               <TabsContent value="simple" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Informações Básicas</CardTitle>
-                    <CardDescription>Dados da promotora e da loja visitada</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Informações Básicas</CardTitle>
+                      <CardDescription>Dados da promotora e da loja visitada</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="promoter">Promotora *</Label>
+                          <Input
+                            id="promoter"
+                            name="promoter"
+                            placeholder="Seu nome"
+                            value={formData.promoter}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="visitDate">Data da Visita *</Label>
+                          <Input
+                            id="visitDate"
+                            name="visitDate"
+                            type="date"
+                            value={formData.visitDate}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="network">Rede *</Label>
+                          <Input
+                            id="network"
+                            name="network"
+                            placeholder="Ex: Zona Sul, Pão de Açúcar, OBA"
+                            value={formData.network}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="store">Loja *</Label>
+                          <Input
+                            id="store"
+                            name="store"
+                            placeholder="Ex: Loja 17 Barra da Tijuca"
+                            value={formData.store}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="leaderName">Líder da Padaria</Label>
+                          <Input
+                            id="leaderName"
+                            name="leaderName"
+                            placeholder="Nome do responsável"
+                            value={formData.leaderName}
+                            onChange={handleInputChange}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="leaderPhone">Telefone do Líder</Label>
+                          <Input
+                            id="leaderPhone"
+                            name="leaderPhone"
+                            placeholder="Ex: (21) 99999-9999"
+                            value={formData.leaderPhone}
+                            onChange={handleInputChange}
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Freezer Section */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Estoque (Câmara Fria)</CardTitle>
+                      <CardDescription>Situação dos produtos em refrigeração</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-3">
+                        <Label>Produtos Bridor presentes?</Label>
+                        <RadioGroup value={formData.productsInFreezer} onValueChange={(value) => handleSelectChange("productsInFreezer", value)}>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="yes" id="freezer-yes" />
+                            <Label htmlFor="freezer-yes" className="font-normal cursor-pointer">Sim</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="no" id="freezer-no" />
+                            <Label htmlFor="freezer-no" className="font-normal cursor-pointer">Não</Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
+
                       <div className="space-y-2">
-                        <Label htmlFor="promoter">Promotora *</Label>
-                        <Input
-                          id="promoter"
-                          name="promoter"
-                          placeholder="Seu nome"
-                          value={formData.promoter}
+                        <Label htmlFor="freezerProducts">Quais produtos em estoque?</Label>
+                        <Textarea
+                          id="freezerProducts"
+                          name="freezerProducts"
+                          placeholder="Ex: 5 cx Croissant Tradicional, 2 cx Folhado Chocolate"
+                          value={formData.freezerProducts}
                           onChange={handleInputChange}
-                          required
+                          rows={2}
                         />
                       </div>
+
+                      <div className="space-y-3">
+                        <Label>Organização/Limpeza</Label>
+                        <RadioGroup value={formData.freezerOrganization} onValueChange={(value) => handleSelectChange("freezerOrganization", value)}>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="ok" id="org-ok" />
+                            <Label htmlFor="org-ok" className="font-normal cursor-pointer">OK</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="problem" id="org-problem" />
+                            <Label htmlFor="org-problem" className="font-normal cursor-pointer">Problema</Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
+
                       <div className="space-y-2">
-                        <Label htmlFor="visitDate">Data da Visita *</Label>
-                        <Input
-                          id="visitDate"
-                          name="visitDate"
-                          type="date"
-                          value={formData.visitDate}
+                        <Label htmlFor="freezerProblems">Problemas (se houver)</Label>
+                        <Textarea
+                          id="freezerProblems"
+                          name="freezerProblems"
+                          placeholder="Ex: Produtos amassados, Acesso negado, Pouco espaço"
+                          value={formData.freezerProblems}
                           onChange={handleInputChange}
-                          required
+                          rows={2}
                         />
                       </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Counter/PDV Section */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Balcão/PDV</CardTitle>
+                      <CardDescription>Situação dos produtos expostos</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-3">
+                        <Label>Produtos Bridor assados hoje?</Label>
+                        <RadioGroup value={formData.productsToasted} onValueChange={(value) => handleSelectChange("productsToasted", value)}>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="yes" id="toasted-yes" />
+                            <Label htmlFor="toasted-yes" className="font-normal cursor-pointer">Sim</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="no" id="toasted-no" />
+                            <Label htmlFor="toasted-no" className="font-normal cursor-pointer">Não</Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
+
                       <div className="space-y-2">
-                        <Label htmlFor="network">Rede *</Label>
-                        <Input
-                          id="network"
-                          name="network"
-                          placeholder="Ex: Zona Sul, Pão de Açúcar, OBA"
-                          value={formData.network}
+                        <Label htmlFor="toastedProducts">Quais produtos assados?</Label>
+                        <Textarea
+                          id="toastedProducts"
+                          name="toastedProducts"
+                          placeholder="Ex: Croissant Tradicional, Mini Amanteigado"
+                          value={formData.toastedProducts}
                           onChange={handleInputChange}
-                          required
+                          rows={2}
                         />
                       </div>
+
+                      <div className="space-y-3">
+                        <Label>Qualidade Visual</Label>
+                        <Select value={formData.visualQuality} onValueChange={(value) => handleSelectChange("visualQuality", value)}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="excellent">Ótima</SelectItem>
+                            <SelectItem value="good">Boa</SelectItem>
+                            <SelectItem value="regular">Regular</SelectItem>
+                            <SelectItem value="poor">Ruim</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-3">
+                        <Label>Exposição</Label>
+                        <RadioGroup value={formData.exposure} onValueChange={(value) => handleSelectChange("exposure", value)}>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="ok" id="exp-ok" />
+                            <Label htmlFor="exp-ok" className="font-normal cursor-pointer">OK</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="problem" id="exp-problem" />
+                            <Label htmlFor="exp-problem" className="font-normal cursor-pointer">Problema</Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
+
                       <div className="space-y-2">
-                        <Label htmlFor="store">Loja *</Label>
-                        <Input
-                          id="store"
-                          name="store"
-                          placeholder="Ex: Loja 17 Barra da Tijuca"
-                          value={formData.store}
+                        <Label htmlFor="exposureProblems">Detalhes</Label>
+                        <Textarea
+                          id="exposureProblems"
+                          name="exposureProblems"
+                          placeholder="Ex: Sem etiqueta, Pouca visibilidade"
+                          value={formData.exposureProblems}
                           onChange={handleInputChange}
-                          required
+                          rows={2}
                         />
                       </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* General Observations */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Observações Gerais</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="leaderName">Líder da Padaria</Label>
-                        <Input
-                          id="leaderName"
-                          name="leaderName"
-                          placeholder="Nome do responsável"
-                          value={formData.leaderName}
+                        <Label htmlFor="generalObservations">Feedback, oportunidades e boas práticas</Label>
+                        <Textarea
+                          id="generalObservations"
+                          name="generalObservations"
+                          placeholder="Ex: Gerente pediu mais etiquetas, Degustação de sucesso, Cross-merchandising com queijos"
+                          value={formData.generalObservations}
                           onChange={handleInputChange}
+                          rows={3}
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="leaderPhone">Telefone do Líder</Label>
-                        <Input
-                          id="leaderPhone"
-                          name="leaderPhone"
-                          placeholder="Ex: (21) 99999-9999"
-                          value={formData.leaderPhone}
-                          onChange={handleInputChange}
-                        />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
 
-                {/* Freezer Section */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Estoque (Câmara Fria)</CardTitle>
-                    <CardDescription>Situação dos produtos em refrigeração</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-3">
-                      <Label>Produtos Bridor presentes?</Label>
-                      <RadioGroup value={formData.productsInFreezer} onValueChange={(value) => handleSelectChange("productsInFreezer", value)}>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="yes" id="freezer-yes" />
-                          <Label htmlFor="freezer-yes" className="font-normal cursor-pointer">Sim</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="no" id="freezer-no" />
-                          <Label htmlFor="freezer-no" className="font-normal cursor-pointer">Não</Label>
-                        </div>
-                      </RadioGroup>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="freezerProducts">Quais produtos em estoque?</Label>
-                      <Textarea
-                        id="freezerProducts"
-                        name="freezerProducts"
-                        placeholder="Ex: 5 cx Croissant Tradicional, 2 cx Folhado Chocolate"
-                        value={formData.freezerProducts}
-                        onChange={handleInputChange}
-                        rows={2}
-                      />
-                    </div>
-
-                    <div className="space-y-3">
-                      <Label>Organização/Limpeza</Label>
-                      <RadioGroup value={formData.freezerOrganization} onValueChange={(value) => handleSelectChange("freezerOrganization", value)}>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="ok" id="org-ok" />
-                          <Label htmlFor="org-ok" className="font-normal cursor-pointer">OK</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="problem" id="org-problem" />
-                          <Label htmlFor="org-problem" className="font-normal cursor-pointer">Problema</Label>
-                        </div>
-                      </RadioGroup>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="freezerProblems">Problemas (se houver)</Label>
-                      <Textarea
-                        id="freezerProblems"
-                        name="freezerProblems"
-                        placeholder="Ex: Produtos amassados, Acesso negado, Pouco espaço"
-                        value={formData.freezerProblems}
-                        onChange={handleInputChange}
-                        rows={2}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Counter/PDV Section */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Balcão/PDV</CardTitle>
-                    <CardDescription>Situação dos produtos expostos</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-3">
-                      <Label>Produtos Bridor assados hoje?</Label>
-                      <RadioGroup value={formData.productsToasted} onValueChange={(value) => handleSelectChange("productsToasted", value)}>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="yes" id="toasted-yes" />
-                          <Label htmlFor="toasted-yes" className="font-normal cursor-pointer">Sim</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="no" id="toasted-no" />
-                          <Label htmlFor="toasted-no" className="font-normal cursor-pointer">Não</Label>
-                        </div>
-                      </RadioGroup>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="toastedProducts">Quais produtos assados?</Label>
-                      <Textarea
-                        id="toastedProducts"
-                        name="toastedProducts"
-                        placeholder="Ex: Croissant Tradicional, Mini Amanteigado"
-                        value={formData.toastedProducts}
-                        onChange={handleInputChange}
-                        rows={2}
-                      />
-                    </div>
-
-                    <div className="space-y-3">
-                      <Label>Qualidade Visual</Label>
-                      <Select value={formData.visualQuality} onValueChange={(value) => handleSelectChange("visualQuality", value)}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="excellent">Ótima</SelectItem>
-                          <SelectItem value="good">Boa</SelectItem>
-                          <SelectItem value="regular">Regular</SelectItem>
-                          <SelectItem value="poor">Ruim</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-3">
-                      <Label>Exposição</Label>
-                      <RadioGroup value={formData.exposure} onValueChange={(value) => handleSelectChange("exposure", value)}>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="ok" id="exp-ok" />
-                          <Label htmlFor="exp-ok" className="font-normal cursor-pointer">OK</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="problem" id="exp-problem" />
-                          <Label htmlFor="exp-problem" className="font-normal cursor-pointer">Problema</Label>
-                        </div>
-                      </RadioGroup>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="exposureProblems">Detalhes</Label>
-                      <Textarea
-                        id="exposureProblems"
-                        name="exposureProblems"
-                        placeholder="Ex: Sem etiqueta, Pouca visibilidade"
-                        value={formData.exposureProblems}
-                        onChange={handleInputChange}
-                        rows={2}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* General Observations */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Observações Gerais</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="generalObservations">Feedback, oportunidades e boas práticas</Label>
-                      <Textarea
-                        id="generalObservations"
-                        name="generalObservations"
-                        placeholder="Ex: Gerente pediu mais etiquetas, Degustação de sucesso, Cross-merchandising com queijos"
-                        value={formData.generalObservations}
-                        onChange={handleInputChange}
-                        rows={3}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
+                  {/* Submit Button */}
+                  <div className="mt-8 flex gap-3">
+                    <Button
+                      type="submit"
+                      size="lg"
+                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+                      disabled={submitMutation.isPending}
+                    >
+                      {submitMutation.isPending ? "Enviando..." : "Preparar Relatório para WhatsApp"}
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={resetForm}
+                      variant="outline"
+                      size="lg"
+                    >
+                      Limpar
+                    </Button>
+                  </div>
+                </form>
               </TabsContent>
 
               {/* Critical Report */}
               <TabsContent value="critical" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Informações Básicas</CardTitle>
-                    <CardDescription>Dados da promotora e da loja visitada</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="promoter-crit">Promotora *</Label>
-                        <Input
-                          id="promoter-crit"
-                          name="promoter"
-                          placeholder="Seu nome"
-                          value={formData.promoter}
-                          onChange={handleInputChange}
-                          required
-                        />
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Informações Básicas</CardTitle>
+                      <CardDescription>Dados da promotora e da loja visitada</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="promoter-crit">Promotora *</Label>
+                          <Input
+                            id="promoter-crit"
+                            name="promoter"
+                            placeholder="Seu nome"
+                            value={formData.promoter}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="visitDate-crit">Data da Visita *</Label>
+                          <Input
+                            id="visitDate-crit"
+                            name="visitDate"
+                            type="date"
+                            value={formData.visitDate}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="network-crit">Rede *</Label>
+                          <Input
+                            id="network-crit"
+                            name="network"
+                            placeholder="Ex: Zona Sul, Pão de Açúcar"
+                            value={formData.network}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="store-crit">Loja *</Label>
+                          <Input
+                            id="store-crit"
+                            name="store"
+                            placeholder="Ex: Loja 17 Barra da Tijuca"
+                            value={formData.store}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="leaderName-crit">Líder da Padaria</Label>
+                          <Input
+                            id="leaderName-crit"
+                            name="leaderName"
+                            placeholder="Nome do responsável"
+                            value={formData.leaderName}
+                            onChange={handleInputChange}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="leaderPhone-crit">Telefone do Líder</Label>
+                          <Input
+                            id="leaderPhone-crit"
+                            name="leaderPhone"
+                            placeholder="Ex: (21) 99999-9999"
+                            value={formData.leaderPhone}
+                            onChange={handleInputChange}
+                          />
+                        </div>
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="visitDate-crit">Data da Visita *</Label>
-                        <Input
-                          id="visitDate-crit"
-                          name="visitDate"
-                          type="date"
-                          value={formData.visitDate}
-                          onChange={handleInputChange}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="network-crit">Rede *</Label>
-                        <Input
-                          id="network-crit"
-                          name="network"
-                          placeholder="Ex: Zona Sul, Pão de Açúcar"
-                          value={formData.network}
-                          onChange={handleInputChange}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="store-crit">Loja *</Label>
-                        <Input
-                          id="store-crit"
-                          name="store"
-                          placeholder="Ex: Loja 17 Barra da Tijuca"
-                          value={formData.store}
-                          onChange={handleInputChange}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="leaderName-crit">Líder da Padaria</Label>
-                        <Input
-                          id="leaderName-crit"
-                          name="leaderName"
-                          placeholder="Nome do responsável"
-                          value={formData.leaderName}
-                          onChange={handleInputChange}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="leaderPhone-crit">Telefone do Líder</Label>
-                        <Input
-                          id="leaderPhone-crit"
-                          name="leaderPhone"
-                          placeholder="Ex: (21) 99999-9999"
-                          value={formData.leaderPhone}
-                          onChange={handleInputChange}
-                        />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
 
-                <Card className="border-red-200 bg-red-50">
-                  <CardHeader>
-                    <CardTitle className="text-red-900">Problema Principal Identificado</CardTitle>
-                    <CardDescription className="text-red-800">Descreva o problema crítico encontrado</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Textarea
-                      name="mainProblem"
-                      placeholder="Ex: Ruptura Crônica desde abril, Problema de Qualidade, Erro de Sistema"
-                      value={formData.mainProblem}
-                      onChange={handleInputChange}
-                      rows={3}
-                      required
-                    />
-                  </CardContent>
-                </Card>
+                  <Card className="border-red-200 bg-red-50">
+                    <CardHeader>
+                      <CardTitle className="text-red-900">Problema Principal Identificado</CardTitle>
+                      <CardDescription className="text-red-800">Descreva o problema crítico encontrado</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Textarea
+                        name="mainProblem"
+                        placeholder="Ex: Ruptura Crônica desde abril, Problema de Qualidade, Erro de Sistema"
+                        value={formData.mainProblem}
+                        onChange={handleInputChange}
+                        rows={3}
+                        required
+                      />
+                    </CardContent>
+                  </Card>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Detalhes do Estoque (Câmara Fria)</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Textarea
-                      name="stockDetails"
-                      placeholder="Produtos em falta, quantidade de estoque, condição da câmara, acesso, etc."
-                      value={formData.stockDetails}
-                      onChange={handleInputChange}
-                      rows={4}
-                    />
-                  </CardContent>
-                </Card>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Detalhes do Estoque (Câmara Fria)</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Textarea
+                        name="stockDetails"
+                        placeholder="Produtos em falta, quantidade de estoque, condição da câmara, acesso, etc."
+                        value={formData.stockDetails}
+                        onChange={handleInputChange}
+                        rows={4}
+                      />
+                    </CardContent>
+                  </Card>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Detalhes do Balcão/PDV</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Textarea
-                      name="counterDetails"
-                      placeholder="Produtos assados, qualidade visual, exposição, etiquetas, etc."
-                      value={formData.counterDetails}
-                      onChange={handleInputChange}
-                      rows={4}
-                    />
-                  </CardContent>
-                </Card>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Detalhes do Balcão/PDV</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Textarea
+                        name="counterDetails"
+                        placeholder="Produtos assados, qualidade visual, exposição, etiquetas, etc."
+                        value={formData.counterDetails}
+                        onChange={handleInputChange}
+                        rows={4}
+                      />
+                    </CardContent>
+                  </Card>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Ação Tomada pela Promotora</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Textarea
-                      name="actionTaken"
-                      placeholder="Ex: Orientei padeiro, Falei com gerente, Avisei o líder da padaria"
-                      value={formData.actionTaken}
-                      onChange={handleInputChange}
-                      rows={3}
-                    />
-                  </CardContent>
-                </Card>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Ação Tomada pela Promotora</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Textarea
+                        name="actionTaken"
+                        placeholder="Ex: Orientei padeiro, Falei com gerente, Avisei o líder da padaria"
+                        value={formData.actionTaken}
+                        onChange={handleInputChange}
+                        rows={3}
+                      />
+                    </CardContent>
+                  </Card>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Feedback da Loja/Líder</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Textarea
-                      name="feedback"
-                      placeholder="Ex: Gerente informou que não recebe o produto desde ABRIL"
-                      value={formData.feedback}
-                      onChange={handleInputChange}
-                      rows={3}
-                    />
-                  </CardContent>
-                </Card>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Feedback da Loja/Líder</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Textarea
+                        name="feedback"
+                        placeholder="Ex: Gerente informou que não recebe o produto desde ABRIL"
+                        value={formData.feedback}
+                        onChange={handleInputChange}
+                        rows={3}
+                      />
+                    </CardContent>
+                  </Card>
+
+                  {/* Submit Button */}
+                  <div className="mt-8 flex gap-3">
+                    <Button
+                      type="submit"
+                      size="lg"
+                      className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold"
+                      disabled={submitMutation.isPending}
+                    >
+                      {submitMutation.isPending ? "Enviando..." : "Preparar Alerta para WhatsApp"}
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={resetForm}
+                      variant="outline"
+                      size="lg"
+                    >
+                      Limpar
+                    </Button>
+                  </div>
+                </form>
               </TabsContent>
             </Tabs>
-
-            {/* Submit Button */}
-            <div className="mt-8 flex gap-3">
-              <Button
-                onClick={handleSubmit}
-                size="lg"
-                disabled={isLoading}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold"
-              >
-                {isLoading ? "Enviando..." : "Preparar Relatório para WhatsApp"}
-              </Button>
-              <Button
-                onClick={resetForm}
-                variant="outline"
-                size="lg"
-              >
-                Limpar
-              </Button>
-            </div>
           </div>
         )}
       </div>
