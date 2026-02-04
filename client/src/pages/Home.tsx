@@ -38,7 +38,6 @@ export default function Home() {
   });
 
   const [submitted, setSubmitted] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -49,7 +48,7 @@ export default function Home() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.promoter || !formData.visitDate || !formData.network || !formData.store) {
@@ -57,46 +56,23 @@ export default function Home() {
       return;
     }
 
-    setIsLoading(true);
-
     try {
-      // Format the report
       const report = formatReport();
       
-      // Send to backend
-      const response = await fetch("/api/trpc/reports.submit", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          json: {
-            reportType,
-            ...formData,
-            report,
-          },
-        }),
+      navigator.clipboard.writeText(report).then(() => {
+        toast.success("Relatório copiado para a área de transferência!");
+        setSubmitted(true);
+        
+        setTimeout(() => {
+          resetForm();
+        }, 2000);
+      }).catch((err) => {
+        console.error("Erro ao copiar:", err);
+        toast.error("Erro ao copiar para clipboard");
       });
-
-      if (!response.ok) {
-        throw new Error("Erro ao enviar relatório");
-      }
-
-      // Copy to clipboard
-      await navigator.clipboard.writeText(report);
-      toast.success("Relatório enviado e copiado para a área de transferência!");
-      setSubmitted(true);
-      
-      // Reset form after 2 seconds
-      setTimeout(() => {
-        resetForm();
-      }, 2000);
     } catch (error) {
       console.error("Erro:", error);
-      toast.error("Erro ao enviar relatório");
-    } finally {
-      setIsLoading(false);
+      toast.error("Erro ao preparar relatório");
     }
   };
 
@@ -127,7 +103,7 @@ export default function Home() {
 **3. OBSERVAÇÕES GERAIS:**
 ${formData.generalObservations || "Nenhuma observação adicional"}
 
----
+----
 *Envie fotos da visita logo após este relatório*`;
     } else {
       return `*ALERTA BRIDOR - VISITA CRÍTICA*
@@ -154,7 +130,7 @@ ${formData.actionTaken}
 **5. FEEDBACK DA LOJA/LÍDER:**
 ${formData.feedback}
 
----
+----
 *Envie fotos de evidência da situação logo após este relatório*`;
     }
   };
@@ -638,10 +614,9 @@ ${formData.feedback}
               <Button
                 onClick={handleSubmit}
                 size="lg"
-                disabled={isLoading}
                 className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold"
               >
-                {isLoading ? "Enviando..." : "Preparar Relatório para WhatsApp"}
+                Preparar Relatório para WhatsApp
               </Button>
               <Button
                 onClick={resetForm}
