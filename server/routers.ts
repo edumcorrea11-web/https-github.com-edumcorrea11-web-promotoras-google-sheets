@@ -3,6 +3,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { createReport } from "./db";
+import { sendReportNotification } from "./emailService";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -55,6 +56,38 @@ export const appRouter = router({
           userId: 1,
           ...input,
         });
+
+        // Send email notification asynchronously (don't wait for it)
+        const mockReport = {
+          id: 0,
+          userId: 1,
+          reportType: input.reportType,
+          promoter: input.promoter,
+          visitDate: input.visitDate,
+          network: input.network,
+          store: input.store,
+          leaderName: input.leaderName ?? null,
+          leaderPhone: input.leaderPhone ?? null,
+          productsInFreezer: input.productsInFreezer ?? null,
+          freezerProducts: input.freezerProducts ?? null,
+          freezerOrganization: input.freezerOrganization ?? null,
+          freezerProblems: input.freezerProblems ?? null,
+          productsToasted: input.productsToasted ?? null,
+          toastedProducts: input.toastedProducts ?? null,
+          visualQuality: input.visualQuality ?? null,
+          exposure: input.exposure ?? null,
+          exposureProblems: input.exposureProblems ?? null,
+          generalObservations: input.generalObservations ?? null,
+          mainProblem: input.mainProblem ?? null,
+          stockDetails: input.stockDetails ?? null,
+          counterDetails: input.counterDetails ?? null,
+          actionTaken: input.actionTaken ?? null,
+          feedback: input.feedback ?? null,
+          report: input.report,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        sendReportNotification(mockReport).catch(err => console.error('Failed to send notification:', err));
 
         return { success: true, message: 'Report submitted successfully' };
       }),
