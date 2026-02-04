@@ -62,12 +62,12 @@ export default function Home() {
       await navigator.clipboard.writeText(report);
       toast.success("Relatório copiado para a área de transferência!");
       
-      const response = await fetch("/api/trpc/reports.submit?batch=1", {
+      const response = await fetch("/api/trpc/reports.submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          0: { json: { reportType, ...formData } }
+          json: { reportType: formData.productsInFreezer ? "simple" : "critical", ...formData, report: "" }
         })
       });
       
