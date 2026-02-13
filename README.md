@@ -86,10 +86,25 @@ Relatório é formatado automaticamente
          ↓
 Texto é copiado para a área de transferência
          ↓
+Dados são enviados automaticamente para Google Sheets
+         ↓
 Cola no WhatsApp e envia
          ↓
 Gerente recebe e analisa os dados estruturados
+         ↓
+Planilha é atualizada em tempo real com todos os relatórios
 ```
+
+## 📊 Integração com Google Sheets
+
+Todos os relatórios preenchidos são **automaticamente registrados em uma planilha Google Sheets** para análise centralizada e histórico completo. Quando a promotora clica em "Preparar Relatório para WhatsApp", os dados são:
+
+- ✅ Copiados para clipboard (para enviar no WhatsApp)
+- ✅ Enviados automaticamente para Google Sheets em tempo real
+- ✅ Organizados em colunas para fácil análise
+- ✅ Salvos com timestamp para rastreabilidade
+
+Isso permite que o Gerente Nacional de Vendas tenha um histórico completo de todas as visitas, problemas identificados e ações tomadas, facilitando a análise de tendências e tomada de decisão estratégica.
 
 ## 🎨 Design
 
