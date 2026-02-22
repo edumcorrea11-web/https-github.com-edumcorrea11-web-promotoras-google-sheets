@@ -116,7 +116,7 @@ ${formData.feedback}
       
       // 1. Copy to clipboard
       await navigator.clipboard.writeText(report);
-      toast.success("Relatório copiado para a área de transferência!");
+      toast.success("Relatório copiado para clipboard!");
       
       // 2. Send to Google Sheets via webhook
       const payload = {
@@ -129,10 +129,15 @@ ${formData.feedback}
         method: 'POST',
         mode: 'no-cors',
         body: JSON.stringify(payload)
-      }).catch(err => console.error('Erro ao enviar para Google Sheets:', err));
+      })
+        .then(() => toast.success("Dados enviados para Google Sheets!"))
+        .catch(err => {
+          console.error('Erro ao enviar para Google Sheets:', err);
+          toast.error("Aviso: Dados nao foram para Google Sheets");
+        });
       
       setSubmitted(true);
-      setTimeout(() => { resetForm(); }, 2000);
+      // Nao reseta automaticamente - deixa o usuario decidir
     } catch (error) {
       console.error("Erro:", error);
       toast.error("Erro ao copiar relatório");
@@ -192,9 +197,14 @@ ${formData.feedback}
                 <CheckCircle2 className="w-16 h-16 text-green-600 mx-auto mb-4" />
                 <h2 className="text-2xl font-bold text-green-900 mb-2">Relatório Preparado!</h2>
                 <p className="text-green-800 mb-4">O relatório foi copiado para a área de transferência e está pronto para enviar no WhatsApp.</p>
-                <Button onClick={resetForm} className="bg-green-600 hover:bg-green-700">
-                  Criar Novo Relatório
-                </Button>
+                <div className="flex gap-3 justify-center">
+                  <Button onClick={() => setSubmitted(false)} className="bg-blue-600 hover:bg-blue-700">
+                    Editar Relatório
+                  </Button>
+                  <Button onClick={resetForm} className="bg-green-600 hover:bg-green-700">
+                    Novo Relatório
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>
