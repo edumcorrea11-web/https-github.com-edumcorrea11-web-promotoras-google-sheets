@@ -13,16 +13,15 @@ import {
   readDraft,
   readRecentValues,
   RECENT_NETWORKS_KEY,
-  RECENT_PROMOTERS_KEY,
   RECENT_STORES_KEY,
   saveDraft,
   rememberRecentValue,
 } from "@/lib/formUtils";
-
-const PROMOTER_SUGGESTIONS = ["Jocieli-RJ", "Odara-SP"];
+import { getPromoterSelectValue, PROMOTER_OPTIONS, resolvePromoterSelection } from "@/lib/promoterUtils";
 
 const createInitialFormData = () => ({
   promoter: "",
+  promoterOption: "",
   visitDate: "",
   network: "",
   store: "",
@@ -53,7 +52,6 @@ export default function Home() {
   const [submitted, setSubmitted] = useState(false);
   const [draftAvailable, setDraftAvailable] = useState(false);
   const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
-  const [recentPromoters, setRecentPromoters] = useState<string[]>([]);
   const [recentNetworks, setRecentNetworks] = useState<string[]>([]);
   const [recentStores, setRecentStores] = useState<string[]>([]);
   const [showValidation, setShowValidation] = useState(false);
@@ -70,6 +68,11 @@ export default function Home() {
 
   const handleSelectChange = (name: string, value: string) => {
     setFormData(prev => ({ ...prev, [name]: value }));
+    setShowValidation(false);
+  };
+
+  const handlePromoterChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, ...resolvePromoterSelection(value) }));
     setShowValidation(false);
   };
 
@@ -100,11 +103,6 @@ export default function Home() {
       formData.feedback,
     ].some(Boolean),
     [formData],
-  );
-
-  const promoterSuggestions = useMemo(
-    () => Array.from(new Set([...PROMOTER_SUGGESTIONS, ...recentPromoters])),
-    [recentPromoters],
   );
 
   const missingRequiredFields = useMemo(() => {
@@ -151,7 +149,6 @@ export default function Home() {
       setDraftAvailable(true);
       setDraftSavedAt(existingDraft.savedAt);
     }
-    setRecentPromoters(readRecentValues(RECENT_PROMOTERS_KEY));
     setRecentNetworks(readRecentValues(RECENT_NETWORKS_KEY));
     setRecentStores(readRecentValues(RECENT_STORES_KEY));
   }, []);
@@ -264,7 +261,6 @@ ${formData.feedback}
 
     try {
       const report = formatReport();
-      setRecentPromoters(rememberRecentValue(RECENT_PROMOTERS_KEY, formData.promoter));
       setRecentNetworks(rememberRecentValue(RECENT_NETWORKS_KEY, formData.network));
       setRecentStores(rememberRecentValue(RECENT_STORES_KEY, formData.store));
       clearDraft();
@@ -387,9 +383,6 @@ ${formData.feedback}
                 </div>
               )}
 
-              <datalist id="promoter-suggestions">
-                {promoterSuggestions.map((value) => <option key={value} value={value} />)}
-              </datalist>
               <datalist id="network-suggestions">
                 {networkSuggestions.map((value) => <option key={value} value={value} />)}
               </datalist>
@@ -433,16 +426,29 @@ ${formData.feedback}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="promoter">Promotora *</Label>
-                          <Input
+                          <select
                             id="promoter"
-                            name="promoter"
-                            placeholder="Seu nome"
-                            list="promoter-suggestions"
-                            autoComplete="name"
-                            value={formData.promoter}
-                            onChange={handleInputChange}
+                            name="promoterOption"
+                            value={getPromoterSelectValue(formData.promoter, formData.promoterOption)}
+                            onChange={(e) => handlePromoterChange(e.target.value)}
+                            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2"
                             required
-                          />
+                          >
+                            <option value="">Selecione a promotora</option>
+                            {PROMOTER_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}
+                            <option value="other">Outro</option>
+                          </select>
+                          {formData.promoterOption === "other" && (
+                            <Input
+                              id="promoter-other"
+                              name="promoter"
+                              placeholder="Digite o nome da pessoa"
+                              value={formData.promoter}
+                              onChange={handleInputChange}
+                              autoComplete="name"
+                              required
+                            />
+                          )}
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="visitDate">Data da Visita *</Label>
@@ -730,16 +736,29 @@ ${formData.feedback}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="promoter-critical">Promotora *</Label>
-                          <Input
+                          <select
                             id="promoter-critical"
-                            name="promoter"
-                            placeholder="Seu nome"
-                            list="promoter-suggestions"
-                            autoComplete="name"
-                            value={formData.promoter}
-                            onChange={handleInputChange}
+                            name="promoterOption"
+                            value={getPromoterSelectValue(formData.promoter, formData.promoterOption)}
+                            onChange={(e) => handlePromoterChange(e.target.value)}
+                            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2"
                             required
-                          />
+                          >
+                            <option value="">Selecione a promotora</option>
+                            {PROMOTER_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}
+                            <option value="other">Outro</option>
+                          </select>
+                          {formData.promoterOption === "other" && (
+                            <Input
+                              id="promoter-other-critical"
+                              name="promoter"
+                              placeholder="Digite o nome da pessoa"
+                              value={formData.promoter}
+                              onChange={handleInputChange}
+                              autoComplete="name"
+                              required
+                            />
+                          )}
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="visitDate-critical">Data da Visita *</Label>

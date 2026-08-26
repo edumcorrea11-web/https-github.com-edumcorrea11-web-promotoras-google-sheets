@@ -2910,3 +2910,23 @@
 - [x] Barra de progresso sem overflow horizontal aparente
 - [x] Validar cliques em Próximo, Voltar e o envio final por verificação de código, TypeScript, build e revisão visual; teste manual pelo usuário é recomendado
 - [x] Salvar checkpoint do Pacote 2
+
+## Atualização do campo Promotora
+
+- [x] Manter Jocieli-RJ e Odara-SP na lista
+- [x] Acrescentar Camila - SP, Giovanna - Chef e Eduardo - Comercial
+- [x] Acrescentar a opção Outro
+- [x] Exibir campo de nome manual quando Outro for selecionado
+- [x] Garantir que o nome escolhido ou digitado siga para clipboard e Google Sheets
+- [x] Testar a lista, a opção Outro e a validação
+- [x] Salvar checkpoint da atualização
+
+## Validação do cadastro de promotoras
+
+- [x] Lista suspensa exibida no modo Visita Normal
+- [x] Lista suspensa exibida no modo Alerta Crítico por compartilhamento do componente
+- [x] Opção Outro prevista com campo de nome manual condicional
+- [x] Lista legível em desktop e celular
+- [x] Testes unitários de opções, seleção e validação aprovados
+- [x] TypeScript e build de produção aprovados
+- [x] Salvar checkpoint da atualização do campo Promotora
