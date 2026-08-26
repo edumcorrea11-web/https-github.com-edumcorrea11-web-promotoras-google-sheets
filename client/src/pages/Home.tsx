@@ -49,6 +49,7 @@ type FormField = keyof ReturnType<typeof createInitialFormData>;
 
 export default function Home() {
   const [reportType, setReportType] = useState("normal");
+  const [currentStep, setCurrentStep] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [draftAvailable, setDraftAvailable] = useState(false);
   const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
@@ -118,6 +119,31 @@ export default function Home() {
 
   const networkSuggestions = useMemo(() => recentNetworks, [recentNetworks]);
   const storeSuggestions = useMemo(() => recentStores, [recentStores]);
+  const steps = reportType === "normal"
+    ? ["Dados da visita", "Estoque", "Balcão/PDV", "Observações"]
+    : ["Dados da visita", "Problema principal", "Estoque", "Balcão/PDV", "Ações e feedback"];
+  const isLastStep = currentStep === steps.length - 1;
+
+  const handleReportTypeChange = (value: string) => {
+    setReportType(value);
+    setCurrentStep(0);
+    setShowValidation(false);
+  };
+
+  const goNext = () => {
+    if (currentStep === 0 && missingRequiredFields.length > 0) {
+      setShowValidation(true);
+      toast.error(`Preencha: ${missingRequiredFields.join(", ")}`);
+      return;
+    }
+    setShowValidation(false);
+    setCurrentStep((step) => Math.min(step + 1, steps.length - 1));
+  };
+
+  const goPrevious = () => {
+    setShowValidation(false);
+    setCurrentStep((step) => Math.max(step - 1, 0));
+  };
 
   useEffect(() => {
     const existingDraft = readDraft();
@@ -152,6 +178,7 @@ export default function Home() {
     }
 
     setReportType(existingDraft.reportType);
+    setCurrentStep(0);
     setFormData({ ...createInitialFormData(), ...existingDraft.formData });
     setDraftAvailable(false);
     toast.success("Rascunho recuperado neste aparelho");
@@ -283,6 +310,7 @@ ${formData.feedback}
     setDraftSavedAt(null);
     setShowValidation(false);
     setSheetStatus("idle");
+    setCurrentStep(0);
     setSubmitted(false);
   };
 
@@ -369,7 +397,7 @@ ${formData.feedback}
                 {storeSuggestions.map((value) => <option key={value} value={value} />)}
               </datalist>
 
-              <Tabs value={reportType} onValueChange={setReportType} className="w-full">
+              <Tabs value={reportType} onValueChange={handleReportTypeChange} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 mb-8">
                   <TabsTrigger value="normal" className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4" />
@@ -381,9 +409,22 @@ ${formData.feedback}
                   </TabsTrigger>
                 </TabsList>
 
+                <div className="mb-6 rounded-lg border border-slate-200 bg-white p-4" aria-label="Progresso do preenchimento">
+                  <div className="mb-3 flex items-center justify-between gap-3 text-sm">
+                    <span className="font-semibold text-slate-900">Etapa {currentStep + 1} de {steps.length}</span>
+                    <span className="text-right text-slate-600">{steps[currentStep]}</span>
+                  </div>
+                  <div className="flex gap-1" aria-hidden="true">
+                    {steps.map((step, index) => (
+                      <div key={step} className={`h-2 flex-1 rounded-full ${index <= currentStep ? "bg-blue-600" : "bg-slate-200"}`} />
+                    ))}
+                  </div>
+                  <p className="mt-3 text-xs text-slate-500">Os dados ficam preservados quando você avança ou volta.</p>
+                </div>
+
                 {/* Normal Report */}
                 <TabsContent value="normal" className="space-y-6">
-                  <Card>
+                  <Card className={currentStep === 0 ? "" : "hidden"}>
                     <CardHeader>
                       <CardTitle>Informações Básicas</CardTitle>
                       <CardDescription>Dados da promotora e da loja visitada</CardDescription>
@@ -464,7 +505,7 @@ ${formData.feedback}
                     </CardContent>
                   </Card>
 
-                  <Card>
+                  <Card className={currentStep === 1 ? "" : "hidden"}>
                     <CardHeader>
                       <CardTitle>Estoque (Câmara Fria)</CardTitle>
                     </CardHeader>
@@ -552,7 +593,7 @@ ${formData.feedback}
                     </CardContent>
                   </Card>
 
-                  <Card>
+                  <Card className={currentStep === 2 ? "" : "hidden"}>
                     <CardHeader>
                       <CardTitle>Balcão/PDV</CardTitle>
                     </CardHeader>
@@ -663,7 +704,7 @@ ${formData.feedback}
                     </CardContent>
                   </Card>
 
-                  <Card>
+                  <Card className={currentStep === 3 ? "" : "hidden"}>
                     <CardHeader>
                       <CardTitle>Observações Gerais</CardTitle>
                     </CardHeader>
@@ -681,7 +722,7 @@ ${formData.feedback}
 
                 {/* Critical Alert */}
                 <TabsContent value="critical" className="space-y-6">
-                  <Card>
+                  <Card className={currentStep === 0 ? "" : "hidden"}>
                     <CardHeader>
                       <CardTitle>Informações Básicas</CardTitle>
                     </CardHeader>
@@ -741,7 +782,7 @@ ${formData.feedback}
                     </CardContent>
                   </Card>
 
-                  <Card>
+                  <Card className={currentStep === 1 ? "" : "hidden"}>
                     <CardHeader>
                       <CardTitle>Problema Principal Identificado</CardTitle>
                     </CardHeader>
@@ -764,7 +805,7 @@ ${formData.feedback}
                     </CardContent>
                   </Card>
 
-                  <Card>
+                  <Card className={currentStep === 2 ? "" : "hidden"}>
                     <CardHeader>
                       <CardTitle>Detalhes do Estoque</CardTitle>
                     </CardHeader>
@@ -787,7 +828,7 @@ ${formData.feedback}
                     </CardContent>
                   </Card>
 
-                  <Card>
+                  <Card className={currentStep === 3 ? "" : "hidden"}>
                     <CardHeader>
                       <CardTitle>Detalhes do Balcão/PDV</CardTitle>
                     </CardHeader>
@@ -810,7 +851,7 @@ ${formData.feedback}
                     </CardContent>
                   </Card>
 
-                  <Card>
+                  <Card className={currentStep === 4 ? "" : "hidden"}>
                     <CardHeader>
                       <CardTitle>Ação Tomada</CardTitle>
                     </CardHeader>
@@ -825,7 +866,7 @@ ${formData.feedback}
                     </CardContent>
                   </Card>
 
-                  <Card>
+                  <Card className={currentStep === 4 ? "" : "hidden"}>
                     <CardHeader>
                       <CardTitle>Feedback da Loja/Líder</CardTitle>
                     </CardHeader>
@@ -842,25 +883,30 @@ ${formData.feedback}
                 </TabsContent>
               </Tabs>
 
-              {/* Submit Button */}
+              {/* Step navigation */}
               <div className="mt-8">
                 <div className="flex flex-col gap-3 sm:flex-row">
-                  <Button
-                    type="button"
-                    onClick={handleSubmit}
-                    disabled={isSubmitting}
-                    size="lg"
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold disabled:cursor-wait disabled:opacity-70"
-                  >
-                    {isSubmitting ? "Preparando relatório..." : "Preparar Relatório para WhatsApp"}
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={resetForm}
-                    variant="outline"
-                    size="lg"
-                    disabled={isSubmitting}
-                  >
+                  {currentStep > 0 && (
+                    <Button type="button" onClick={goPrevious} variant="outline" size="lg" disabled={isSubmitting}>
+                      Voltar
+                    </Button>
+                  )}
+                  {isLastStep ? (
+                    <Button
+                      type="button"
+                      onClick={handleSubmit}
+                      disabled={isSubmitting}
+                      size="lg"
+                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold disabled:cursor-wait disabled:opacity-70"
+                    >
+                      {isSubmitting ? "Preparando relatório..." : "Preparar Relatório para WhatsApp"}
+                    </Button>
+                  ) : (
+                    <Button type="button" onClick={goNext} size="lg" className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold">
+                      Próximo
+                    </Button>
+                  )}
+                  <Button type="button" onClick={resetForm} variant="outline" size="lg" disabled={isSubmitting}>
                     Limpar
                   </Button>
                 </div>
