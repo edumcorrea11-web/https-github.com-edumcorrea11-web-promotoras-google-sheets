@@ -11,16 +11,16 @@ describe("promoterUtils", () => {
     expect(PROMOTER_OPTIONS).toEqual([
       "Jocieli-RJ",
       "Odara-SP",
-      "Camila - SP",
+      "Camila - DF",
       "Giovanna - Chef",
       "Eduardo - Comercial",
     ]);
   });
 
   it("resolve uma promotora fixa sem apagar o nome", () => {
-    expect(resolvePromoterSelection("Camila - SP")).toEqual({
-      promoterOption: "Camila - SP",
-      promoter: "Camila - SP",
+    expect(resolvePromoterSelection("Camila - DF")).toEqual({
+      promoterOption: "Camila - DF",
+      promoter: "Camila - DF",
     });
   });
 

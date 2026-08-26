@@ -2929,4 +2929,13 @@
 - [x] Lista legível em desktop e celular
 - [x] Testes unitários de opções, seleção e validação aprovados
 - [x] TypeScript e build de produção aprovados
+- [x] Validação visual em celular após a correção de Camila - DF
 - [x] Salvar checkpoint da atualização do campo Promotora
+
+## Correção de promotora
+
+- [x] Alterar “Camila - SP” para “Camila - DF” na lista do formulário
+- [x] Atualizar o teste unitário correspondente
+- [x] Confirmar que o nome corrigido segue para clipboard e Google Sheets
+- [x] Validar interface e build
+- [x] Salvar checkpoint da correção

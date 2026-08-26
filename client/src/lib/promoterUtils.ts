@@ -1,7 +1,7 @@
 export const PROMOTER_OPTIONS = [
   "Jocieli-RJ",
   "Odara-SP",
-  "Camila - SP",
+  "Camila - DF",
   "Giovanna - Chef",
   "Eduardo - Comercial",
 ] as const;
