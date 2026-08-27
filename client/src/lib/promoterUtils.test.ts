@@ -7,13 +7,14 @@ import {
 } from "./promoterUtils";
 
 describe("promoterUtils", () => {
-  it("mantém as cinco opções fixas na ordem definida", () => {
+  it("mantém as seis opções fixas na ordem definida", () => {
     expect(PROMOTER_OPTIONS).toEqual([
       "Jocieli-RJ",
       "Odara-SP",
       "Camila - DF",
       "Giovanna - Chef",
       "Eduardo - Comercial",
+      "Rosana - PR/SC",
     ]);
   });
 
@@ -39,6 +40,7 @@ describe("promoterUtils", () => {
 
   it("valida o nome manual da pessoa eventual", () => {
     expect(isValidPromoter("Eduardo - Comercial")).toBe(true);
+    expect(isValidPromoter("Rosana - PR/SC")).toBe(true);
     expect(isValidPromoter("  ")).toBe(false);
   });
 });

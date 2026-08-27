@@ -4,6 +4,7 @@ export const PROMOTER_OPTIONS = [
   "Camila - DF",
   "Giovanna - Chef",
   "Eduardo - Comercial",
+  "Rosana - PR/SC",
 ] as const;
 
 export const getPromoterSelectValue = (promoter: string, promoterOption?: string) => {

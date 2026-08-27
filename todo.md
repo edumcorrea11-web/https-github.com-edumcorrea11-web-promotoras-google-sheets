@@ -2930,6 +2930,7 @@
 - [x] Testes unitários de opções, seleção e validação aprovados
 - [x] TypeScript e build de produção aprovados
 - [x] Validação visual em celular após a correção de Camila - DF
+- [x] Validação visual em celular após inclusão de Rosana - PR/SC
 - [x] Salvar checkpoint da atualização do campo Promotora
 
 ## Correção de promotora
@@ -2939,3 +2940,11 @@
 - [x] Confirmar que o nome corrigido segue para clipboard e Google Sheets
 - [x] Validar interface e build
 - [x] Salvar checkpoint da correção
+
+## Inclusão de promotora
+
+- [x] Acrescentar Rosana - PR/SC à lista de promotoras
+- [x] Atualizar o teste da ordem e das opções fixas
+- [x] Confirmar preservação da opção Outro e do envio dos dados
+- [x] Validar interface e build
+- [x] Salvar checkpoint da alteração
